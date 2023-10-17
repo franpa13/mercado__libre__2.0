@@ -1,0 +1,92 @@
+const fs = require('fs');
+const path = require('path');
+
+const productsFilePath = path.join(__dirname, "..","data","productsDataBase.json");
+// const products = JSON.parse(fs.readFileSync(productsFilePath, 'utf-8'));
+const products = require("../data/productsDataBase.json")
+
+const toThousand = n => n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
+const productsController = {
+	// Root - Show all products
+	index: (req, res) => {
+		res.render("products",{ productsList : products, })
+	},
+
+	// Detail - Detail from one product
+	detail: (req, res) => {
+		// Do the magic
+		// params
+		const {id}=req.params 
+		const findProduct = products.find((prod)=> prod.id === id)
+		res.render("detail",{product : findProduct})
+		// Buscar el producto
+	},
+
+	// Create - Form to create
+	create: (req, res) => {
+		// Do the magic
+		res.render("product-create-form")
+		
+	},
+	
+	// Create -  Method to store
+	store: (req, res) => {
+		// Do the magic
+	    const newProd = {
+			id: `${Date.now()}`,
+			name:req.body.name,
+			price:req.body.price,
+			discount:req.body.discount,
+			category:req.body.categoory,
+			description:req.body.description,
+			image:req.file?.filename ||"default-image.png"
+		}
+		products.push(newProd)
+		fs.writeFileSync(productsFilePath,JSON.stringify(products))
+		res.redirect("/products")
+	},
+
+	// Update - Form to edit
+	edit: (req, res) => {
+		// Do the magic
+		const {id}=req.params 
+		const productFind = products.find((product)=>product.id ===id)
+		res.render("product-edit-form",{productToEdit : productFind})
+	},
+	// Update - Method to update
+	update: (req, res) => {
+		// Do the magic
+		const{id}= req.params	
+		const productFind = products.find((product)=>product.id ===id)
+		const indexProduct = products.indexOf(productFind)
+		products[indexProduct]={
+			id: productFind.id,
+			name : req.body.name,
+			price: req.body.price,
+			discount : req.body.discount,
+			category: req.body.category,
+			description : req.body.description,
+			image :req.body.image,
+		}
+		fs.writeFileSync(productsFilePath,JSON.stringify(products))
+		res.redirect("/products")
+	
+	},
+
+	// Delete - Delete one product from DB
+	destroy : (req, res) => {
+		// Do the magic
+		
+		const {id}= req.params
+		const newList = products.filter((prod)=> prod.id !== id)
+		fs.writeFileSync(productsFilePath,JSON.stringify(newList))
+		res.render(`products`,{productsList:products})
+		
+
+
+		
+	}
+};
+
+module.exports = productsController;
